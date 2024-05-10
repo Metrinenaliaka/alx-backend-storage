@@ -1,2 +1,2 @@
--- Create the index idx_name_first
-CREATE INDEX idx_name_first ON names (LEFT(name, 1));
+--  creates an index idx_name_first on the table names
+CREATE INDEX idx_name_first ON names(name(1));
