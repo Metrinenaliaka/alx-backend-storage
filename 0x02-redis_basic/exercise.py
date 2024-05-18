@@ -42,6 +42,27 @@ def call_history(method: Callable) -> Callable:
     return wrapper
 
 
+def replay(method: Callable):
+    """Function to display the history of calls of a particular function"""
+    redis_instance = redis.Redis()
+
+    # Generate the keys for inputs and outputs
+    input_key = f"{method.__qualname__}:inputs"
+    output_key = f"{method.__qualname__}:outputs"
+    call_key = f"{method.__qualname__}:calls"
+
+    # Retrieve the history of inputs and outputs
+    inputs = redis_instance.lrange(input_key, 0, -1)
+    outputs = redis_instance.lrange(output_key, 0, -1)
+    call_count = redis_instance.get(call_key).decode('utf-8')
+
+    # Display the history
+    print(f"{method.__qualname__} was called {call_count} times:")
+    for inp, outp in zip(inputs, outputs):
+        print(f"{method.__qualname__}(*{inp.decode(
+            'utf-8')}) -> {outp.decode('utf-8')}")
+
+
 class Cache:
     def __init__(self):
         """ Constructor method"""
@@ -71,3 +92,11 @@ class Cache:
     def get_int(self, key: str) -> int:
         """function that gets a key and converts it to integer"""
         return self.get(key, fn=int)
+
+
+if __name__ == "__main__":
+    cache = Cache()
+    cache.store("foo")
+    cache.store("bar")
+    cache.store(42)
+    replay(cache.store)
